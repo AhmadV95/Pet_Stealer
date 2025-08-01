@@ -1,5 +1,6 @@
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local Players = game:GetService("Players")
 
 -- Create GUI Elements
 local screenGui = Instance.new("ScreenGui")
@@ -56,15 +57,15 @@ stealButton.TextScaled = true
 stealButton.Text = "Steal"
 stealButton.Parent = frame
 
--- Green Button (Bypass Complete - cosmetic only)
+-- Green Button (Bypass)
 local bypassButton = Instance.new("TextButton")
 bypassButton.Size = UDim2.new(1, -20, 0, 40)
 bypassButton.Position = UDim2.new(0, 10, 0, 270)
-bypassButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+bypassButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- Neutral gray
 bypassButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 bypassButton.Font = Enum.Font.GothamBold
 bypassButton.TextScaled = true
-bypassButton.Text = "Bypass Complete"
+bypassButton.Text = "Bypass"
 bypassButton.Parent = frame
 
 -- Function: Fetch Avatar
@@ -74,7 +75,6 @@ local function updateAvatar(username)
 		return
 	end
 	
-	local Players = game:GetService("Players")
 	local success, userId = pcall(function()
 		return Players:GetUserIdFromNameAsync(username)
 	end)
@@ -95,6 +95,34 @@ end
 usernameBox.FocusLost:Connect(function(enterPressed)
 	if enterPressed then
 		updateAvatar(usernameBox.Text)
+	end
+end)
+
+-- Bypass Button Logic
+bypassButton.MouseButton1Click:Connect(function()
+	local username = usernameBox.Text
+	if username == "" then return end
+
+	local targetPlayer = Players:FindFirstChild(username)
+	if targetPlayer then
+		-- Set to bypassing mode
+		bypassButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0) -- Red
+		bypassButton.Text = "Bypassing..."
+
+		task.delay(5, function()
+			-- After 5 seconds, complete
+			bypassButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0) -- Green
+			bypassButton.Text = "Bypass Complete"
+		end)
+	else
+		-- Flash yellow to indicate player not found
+		bypassButton.BackgroundColor3 = Color3.fromRGB(255, 170, 0) -- Yellow
+		bypassButton.Text = "Player Not Found"
+		task.delay(1.5, function()
+			-- Reset to neutral
+			bypassButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- Gray
+			bypassButton.Text = "Bypass"
+		end)
 	end
 end)
 
