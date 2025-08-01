@@ -1,19 +1,63 @@
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 
 -- Create GUI Elements
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AvatarGui"
+screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Frame
+-- Frame (Main UI)
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 300, 0, 400)
 frame.Position = UDim2.new(0.5, -150, 0.5, -200)
 frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 frame.BorderSizePixel = 0
+frame.Active = true -- Needed for dragging
+frame.Draggable = true -- Simple drag support
 frame.Parent = screenGui
+
+-- Resize Handle
+local resizeHandle = Instance.new("Frame")
+resizeHandle.Size = UDim2.new(0, 20, 0, 20)
+resizeHandle.Position = UDim2.new(1, -20, 1, -20)
+resizeHandle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+resizeHandle.BorderSizePixel = 0
+resizeHandle.Active = true
+resizeHandle.Draggable = false
+resizeHandle.Parent = frame
+
+-- Drag-to-Resize Logic
+resizeHandle.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		local startPos = UserInputService:GetMouseLocation()
+		local startSize = frame.Size
+
+		local moveConn
+		local releaseConn
+
+		moveConn = UserInputService.InputChanged:Connect(function(moveInput)
+			if moveInput.UserInputType == Enum.UserInputType.MouseMovement then
+				local delta = UserInputService:GetMouseLocation() - startPos
+				frame.Size = UDim2.new(
+					startSize.X.Scale,
+					math.max(200, startSize.X.Offset + delta.X),
+					startSize.Y.Scale,
+					math.max(200, startSize.Y.Offset + delta.Y)
+				)
+			end
+		end)
+
+		releaseConn = UserInputService.InputEnded:Connect(function(endInput)
+			if endInput.UserInputType == Enum.UserInputType.MouseButton1 then
+				moveConn:Disconnect()
+				releaseConn:Disconnect()
+			end
+		end)
+	end
+end)
 
 -- Title
 local title = Instance.new("TextLabel")
@@ -105,21 +149,17 @@ bypassButton.MouseButton1Click:Connect(function()
 
 	local targetPlayer = Players:FindFirstChild(username)
 	if targetPlayer then
-		-- Set to bypassing mode
 		bypassButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0) -- Red
 		bypassButton.Text = "Bypassing..."
 
 		task.delay(5, function()
-			-- After 5 seconds, complete
 			bypassButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0) -- Green
 			bypassButton.Text = "Bypass Complete"
 		end)
 	else
-		-- Flash yellow to indicate player not found
 		bypassButton.BackgroundColor3 = Color3.fromRGB(255, 170, 0) -- Yellow
 		bypassButton.Text = "Player Not Found"
 		task.delay(1.5, function()
-			-- Reset to neutral
 			bypassButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- Gray
 			bypassButton.Text = "Bypass"
 		end)
