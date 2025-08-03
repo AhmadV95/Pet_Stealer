@@ -7,11 +7,27 @@ local RunService = game:GetService("RunService")
 local targetPlayer = nil
 local followConnection = nil
 
--- ScreenGui
+-- Main ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "TeleportGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
+
+-- Minimize Icon
+local minimizeIcon = Instance.new("TextButton")
+minimizeIcon.Size = UDim2.new(0, 50, 0, 50)
+minimizeIcon.Position = UDim2.new(0, 20, 0, 200)
+minimizeIcon.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+minimizeIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeIcon.Font = Enum.Font.GothamBold
+minimizeIcon.TextScaled = true
+minimizeIcon.Text = "T"
+minimizeIcon.Visible = false
+minimizeIcon.Parent = screenGui
+
+local iconCorner = Instance.new("UICorner")
+iconCorner.CornerRadius = UDim.new(0, 8)
+iconCorner.Parent = minimizeIcon
 
 -- Main Frame
 local frame = Instance.new("Frame")
@@ -23,10 +39,24 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
--- Rounded Corners
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 10)
 corner.Parent = frame
+
+-- Close (X) Button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.Text = "X"
+closeButton.TextScaled = true
+closeButton.Parent = frame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 5)
+closeCorner.Parent = closeButton
 
 -- Resize Handle
 local resizeHandle = Instance.new("Frame")
@@ -77,7 +107,7 @@ title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.Parent = frame
 
--- Dropdown Menu Button
+-- Dropdown Player Button
 local dropdownButton = Instance.new("TextButton")
 dropdownButton.Size = UDim2.new(1, -20, 0, 40)
 dropdownButton.Position = UDim2.new(0, 10, 0, 50)
@@ -92,7 +122,7 @@ local dropdownCorner = Instance.new("UICorner")
 dropdownCorner.CornerRadius = UDim.new(0, 5)
 dropdownCorner.Parent = dropdownButton
 
--- Player List Frame
+-- Dropdown Player List
 local dropdownFrame = Instance.new("Frame")
 dropdownFrame.Size = UDim2.new(1, -20, 0, 0)
 dropdownFrame.Position = UDim2.new(0, 10, 0, 90)
@@ -105,7 +135,7 @@ local dropdownFrameCorner = Instance.new("UICorner")
 dropdownFrameCorner.CornerRadius = UDim.new(0, 5)
 dropdownFrameCorner.Parent = dropdownFrame
 
--- Avatar Image
+-- Avatar
 local avatarImage = Instance.new("ImageLabel")
 avatarImage.Size = UDim2.new(0, 100, 0, 100)
 avatarImage.Position = UDim2.new(0.5, -50, 0, 150)
@@ -165,14 +195,9 @@ local function updatePlayerList()
 			btn.MouseButton1Click:Connect(function()
 				targetPlayer = plr
 				dropdownButton.Text = plr.Name .. " ▼"
-				local thumbType = Enum.ThumbnailType.HeadShot
-				local thumbSize = Enum.ThumbnailSize.Size100x100
-				local content, isReady = Players:GetUserThumbnailAsync(plr.UserId, thumbType, thumbSize)
-				if isReady then
-					avatarImage.Image = content
-				end
+				local content, isReady = Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+				if isReady then avatarImage.Image = content end
 				dropdownFrame.Visible = false
-				dropdownFrame.Size = UDim2.new(1, -20, 0, 0)
 			end)
 
 			y += 30
@@ -186,7 +211,7 @@ dropdownButton.MouseButton1Click:Connect(function()
 	dropdownFrame.Visible = not dropdownFrame.Visible
 end)
 
--- Refresh every 5 sec
+-- Refresh list every 5 sec
 task.spawn(function()
 	while true do
 		updatePlayerList()
@@ -194,7 +219,7 @@ task.spawn(function()
 	end
 end)
 
--- Teleport & Follow
+-- Teleport + Follow
 teleportButton.MouseButton1Click:Connect(function()
 	if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
 		local myChar = player.Character or player.CharacterAdded:Wait()
@@ -214,7 +239,7 @@ teleportButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Turn Off Follow
+-- Turn Off
 turnOffButton.MouseButton1Click:Connect(function()
 	if followConnection then
 		followConnection:Disconnect()
@@ -222,5 +247,17 @@ turnOffButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Initial list
+-- Minimize
+closeButton.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	minimizeIcon.Visible = true
+end)
+
+-- Restore from Minimize
+minimizeIcon.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	minimizeIcon.Visible = false
+end)
+
+-- Initial
 updatePlayerList()
