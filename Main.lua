@@ -1,5 +1,4 @@
 local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -11,7 +10,7 @@ local followConnection = nil
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "TeleportGui"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
+screenGui.Parent = game:GetService("CoreGui")
 
 -- Minimize Icon
 local minimizeIcon = Instance.new("TextButton")
@@ -24,7 +23,6 @@ minimizeIcon.TextScaled = true
 minimizeIcon.Text = "T"
 minimizeIcon.Visible = false
 minimizeIcon.Parent = screenGui
-
 local iconCorner = Instance.new("UICorner")
 iconCorner.CornerRadius = UDim.new(0, 8)
 iconCorner.Parent = minimizeIcon
@@ -43,20 +41,76 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 10)
 corner.Parent = frame
 
--- Close (X) Button
-local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 30, 0, 30)
-closeButton.Position = UDim2.new(1, -35, 0, 5)
-closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.Font = Enum.Font.GothamBold
-closeButton.Text = "X"
-closeButton.TextScaled = true
-closeButton.Parent = frame
+-- ======== Title Bar ========
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 35)
+titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleBar.BorderSizePixel = 0
+titleBar.Parent = frame
+titleBar.Active = true
+titleBar.Draggable = true
 
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 5)
-closeCorner.Parent = closeButton
+local titleText = Instance.new("TextLabel")
+titleText.Text = "Teleport Menu"
+titleText.Size = UDim2.new(1, -90, 1, 0)
+titleText.Position = UDim2.new(0, 10, 0, 0)
+titleText.BackgroundTransparency = 1
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.Font = Enum.Font.GothamBold
+titleText.TextSize = 16
+titleText.TextXAlignment = Enum.TextXAlignment.Left
+titleText.Parent = titleBar
+
+-- Minimize Button
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
+minimizeBtn.Position = UDim2.new(1, -75, 0, 5)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+minimizeBtn.Text = "_"
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextScaled = true
+minimizeBtn.Parent = titleBar
+
+-- Restore Button
+local restoreBtn = Instance.new("TextButton")
+restoreBtn.Size = UDim2.new(0, 25, 0, 25)
+restoreBtn.Position = UDim2.new(1, -50, 0, 5)
+restoreBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+restoreBtn.Text = "▢"
+restoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+restoreBtn.Font = Enum.Font.GothamBold
+restoreBtn.TextScaled = true
+restoreBtn.Parent = titleBar
+
+-- Close Button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -25, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextScaled = true
+closeBtn.Parent = titleBar
+
+-- Button Functions
+minimizeBtn.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	minimizeIcon.Visible = true
+end)
+restoreBtn.MouseButton1Click:Connect(function()
+	frame.Size = UDim2.new(0, 300, 0, 400)
+	frame.Position = UDim2.new(0.5, -150, 0.5, -200)
+end)
+closeBtn.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	minimizeIcon.Visible = true
+end)
+minimizeIcon.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	minimizeIcon.Visible = false
+end)
 
 -- Resize Handle
 local resizeHandle = Instance.new("Frame")
@@ -66,18 +120,15 @@ resizeHandle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 resizeHandle.BorderSizePixel = 0
 resizeHandle.Active = true
 resizeHandle.Parent = frame
-
 local resizeCorner = Instance.new("UICorner")
 resizeCorner.CornerRadius = UDim.new(0, 5)
 resizeCorner.Parent = resizeHandle
 
--- Drag-to-resize
 resizeHandle.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		local startPos = UserInputService:GetMouseLocation()
 		local startSize = frame.Size
 		local moveConn, releaseConn
-
 		moveConn = UserInputService.InputChanged:Connect(function(moveInput)
 			if moveInput.UserInputType == Enum.UserInputType.MouseMovement then
 				local delta = UserInputService:GetMouseLocation() - startPos
@@ -87,7 +138,6 @@ resizeHandle.InputBegan:Connect(function(input)
 				)
 			end
 		end)
-
 		releaseConn = UserInputService.InputEnded:Connect(function(endInput)
 			if endInput.UserInputType == Enum.UserInputType.MouseButton1 then
 				moveConn:Disconnect()
@@ -97,17 +147,7 @@ resizeHandle.InputBegan:Connect(function(input)
 	end
 end)
 
--- Title
-local title = Instance.new("TextLabel")
-title.Text = "Select Player"
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Font = Enum.Font.GothamBold
-title.TextScaled = true
-title.Parent = frame
-
--- Dropdown Player Button
+-- Dropdown Button
 local dropdownButton = Instance.new("TextButton")
 dropdownButton.Size = UDim2.new(1, -20, 0, 40)
 dropdownButton.Position = UDim2.new(0, 10, 0, 50)
@@ -117,12 +157,11 @@ dropdownButton.Font = Enum.Font.Gotham
 dropdownButton.TextSize = 18
 dropdownButton.Text = "Select Player ▼"
 dropdownButton.Parent = frame
-
 local dropdownCorner = Instance.new("UICorner")
 dropdownCorner.CornerRadius = UDim.new(0, 5)
 dropdownCorner.Parent = dropdownButton
 
--- Dropdown Player List
+-- Dropdown Frame
 local dropdownFrame = Instance.new("Frame")
 dropdownFrame.Size = UDim2.new(1, -20, 0, 0)
 dropdownFrame.Position = UDim2.new(0, 10, 0, 90)
@@ -130,18 +169,16 @@ dropdownFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 dropdownFrame.BorderSizePixel = 0
 dropdownFrame.Visible = false
 dropdownFrame.Parent = frame
-
 local dropdownFrameCorner = Instance.new("UICorner")
 dropdownFrameCorner.CornerRadius = UDim.new(0, 5)
 dropdownFrameCorner.Parent = dropdownFrame
 
--- Avatar
+-- Avatar Image
 local avatarImage = Instance.new("ImageLabel")
 avatarImage.Size = UDim2.new(0, 100, 0, 100)
 avatarImage.Position = UDim2.new(0.5, -50, 0, 150)
 avatarImage.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 avatarImage.Parent = frame
-
 local avatarCorner = Instance.new("UICorner")
 avatarCorner.CornerRadius = UDim.new(0, 8)
 avatarCorner.Parent = avatarImage
@@ -156,7 +193,6 @@ teleportButton.Font = Enum.Font.GothamBold
 teleportButton.TextScaled = true
 teleportButton.Text = "Teleport"
 teleportButton.Parent = frame
-
 local teleportCorner = Instance.new("UICorner")
 teleportCorner.CornerRadius = UDim.new(0, 5)
 teleportCorner.Parent = teleportButton
@@ -171,7 +207,6 @@ turnOffButton.Font = Enum.Font.GothamBold
 turnOffButton.TextScaled = true
 turnOffButton.Text = "Turn Off"
 turnOffButton.Parent = frame
-
 local turnOffCorner = Instance.new("UICorner")
 turnOffCorner.CornerRadius = UDim.new(0, 5)
 turnOffCorner.Parent = turnOffButton
@@ -191,7 +226,6 @@ local function updatePlayerList()
 			btn.TextSize = 16
 			btn.Text = plr.Name
 			btn.Parent = dropdownFrame
-
 			btn.MouseButton1Click:Connect(function()
 				targetPlayer = plr
 				dropdownButton.Text = plr.Name .. " ▼"
@@ -199,7 +233,6 @@ local function updatePlayerList()
 				if isReady then avatarImage.Image = content end
 				dropdownFrame.Visible = false
 			end)
-
 			y += 30
 		end
 	end
@@ -227,7 +260,6 @@ teleportButton.MouseButton1Click:Connect(function()
 		if hrp then
 			hrp.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
 		end
-
 		if followConnection then followConnection:Disconnect() end
 		followConnection = RunService.Heartbeat:Connect(function()
 			if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -239,24 +271,12 @@ teleportButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Turn Off
+-- Turn Off Follow
 turnOffButton.MouseButton1Click:Connect(function()
 	if followConnection then
 		followConnection:Disconnect()
 		followConnection = nil
 	end
-end)
-
--- Minimize
-closeButton.MouseButton1Click:Connect(function()
-	frame.Visible = false
-	minimizeIcon.Visible = true
-end)
-
--- Restore from Minimize
-minimizeIcon.MouseButton1Click:Connect(function()
-	frame.Visible = true
-	minimizeIcon.Visible = false
 end)
 
 -- Initial
